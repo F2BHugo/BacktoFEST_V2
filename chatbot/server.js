@@ -18,12 +18,17 @@ const openai = new OpenAI({
 
 async function queryAirtable() {
   const url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}`;
-  const response = await axios.get(url, {
-    headers: {
-      Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`
-    }
-  });
-  return response.data.records;
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`
+      }
+    });
+    return response.data.records;
+  } catch (error) {
+    console.error("❌ Erreur Airtable:", error.response?.status, error.response?.data);
+    throw error;
+  }
 }
 
 async function searchWeb(query) {
@@ -45,6 +50,13 @@ async function searchWeb(query) {
   });
 }
 
+function findFestivalMatch(userMessage, records) {
+  const lowerMessage = userMessage.toLowerCase();
+  return records.find(record =>
+    record.fields.Nom && lowerMessage.includes(record.fields.Nom.toLowerCase())
+  );
+}
+
 app.post('/chat', async (req, res) => {
   const userMessage = req.body.message;
 
@@ -54,38 +66,67 @@ app.post('/chat', async (req, res) => {
       messages: [
         {
           role: 'system',
-          content: "Réponds uniquement par 'oui' ou 'non'. Cette question concerne-t-elle un festival ou une activité à faire autour ?"
-        },
+  content: `
+  Tu es un assistant qui ne répond que par "oui" ou "non".
+  La question suivante est-elle liée aux festivals ou aux activités autour des festivals ?
+
+  Considère comme liées :
+  - les demandes de noms de festivals
+  - les lieux, dates, artistes ou infos sur des festivals
+  - les activités touristiques, logements, transports autour
+  - l’histoire ou les types de festivals
+  - tout ce qui touche aux événements culturels et ou autre activités sportives
+
+  Ne réponds que par "oui" ou "non".`        },
         { role: 'user', content: userMessage }
       ]
     });
 
-    const answer = topicCheck.choices[0].message.content.toLowerCase();
-    if (!answer.includes("oui")) {
+    const answer = topicCheck.choices[0].message.content.toLowerCase().trim();
+      if (!answer.startsWith("oui")) {
       return res.json({ reply: "Je suis un assistant spécialisé dans les festivals. Je ne peux pas répondre à cette question." });
     }
 
     const records = await queryAirtable();
+
     const formattedData = records.map(record => {
       const fields = record.fields;
-      return `Nom : ${fields.Nom}, Lieu : ${fields.Lieu}, Date : ${fields.Date}, Activités : ${fields.Activites || 'non renseignées'}`;
+      return `Festival "${fields.Nom}" à ${fields.Lieu}, le ${fields.Date}. Activités prévues : ${fields.Activites || 'non renseignées'}.`;
     }).join("\n");
 
-    const webResults = await searchWeb(userMessage);
+    const matchedFestival = findFestivalMatch(userMessage, records);
+    let searchQuery = userMessage;
+
+    if (matchedFestival) {
+      const lieu = matchedFestival.fields.Lieu;
+      const nom = matchedFestival.fields.Nom;
+      const date = matchedFestival.fields.Date || '';
+      searchQuery = `Activités à faire autour de ${lieu} pendant le festival ${nom} ${date}`;
+    }
+
+    const webResults = await searchWeb(searchQuery);
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
-          content: `Tu es un assistant expert en festivals. Tu réponds uniquement avec :
-1. Les données suivantes extraites d'une base Airtable :
+          content: `Tu es un assistant expert en festivals.
+
+Voici des données extraites d'une base Airtable :
 ${formattedData}
 
-2. Et les recherches web récentes :
+Et voici des résultats de recherche web liés à la question :
 ${webResults}
 
-Formule une réponse claire et concise à la question de l'utilisateur.`
+Ta mission :
+- Identifier les festivals mentionnés dans la question
+- Utiliser leurs infos (nom, lieu, date, activités prévues)
+- Compléter avec les suggestions d'activités autour du lieu et de la date
+- Répondre de manière fluide, utile et conviviale
+- Ne donne pas toute la liste brute si ce n'est pas utile
+
+Sois synthétique, agréable et pertinent.`
         },
         {
           role: 'user',
@@ -97,7 +138,7 @@ Formule une réponse claire et concise à la question de l'utilisateur.`
     res.json({ reply: completion.choices[0].message.content });
 
   } catch (error) {
-    console.error(error.message);
+    console.error("Erreur serveur :", error.message);
     res.status(500).json({ error: "Erreur interne du serveur." });
   }
 });
