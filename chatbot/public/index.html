@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Assistant Festival</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
+    .message { margin: 10px 0; }
+    .user { color: #007bff; }
+    .bot { color: #28a745; }
+  </style>
+</head>
+<body>
+  <h2>Assistant Festival 🎉</h2>
+  <div id="chat"></div>
+  <input type="text" id="userInput" placeholder="Pose ta question..." style="width: 80%;">
+  <button onclick="sendMessage()">Envoyer</button>
+
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const message = input.value.trim();
+      if (!message) return;
+
+      const chat = document.getElementById("chat");
+      chat.innerHTML += `<div class="message user"><strong>Toi :</strong> ${message}</div>`;
+      input.value = "";
+
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      });
+
+      const data = await res.json();
+      chat.innerHTML += `<div class="message bot"><strong>GPT :</strong> ${data.reply}</div>`;
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+</body>
+</html>
