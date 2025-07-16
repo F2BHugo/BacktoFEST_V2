@@ -118,7 +118,7 @@ Tu réponds uniquement aux questions concernant :
       messages: [
         {
           role: 'system',
-          content: `Tu es un assistant qui ne répond que par \"oui\" ou \"non\". La question suivante est-elle liée aux festivals ou aux activités autour des festivals ?`
+          content: `Tu es un assistant qui ne répond que par \"oui\" ou \"non\". La question suivante est-elle liée aux festivals ou aux activités autour des festivals (hotel camping ou vol)?`
         },
         { role: 'user', content: userMessage }
       ]
