@@ -132,9 +132,7 @@ app.post('/chat', async (req, res) => {
 
     const matchedFestival = findFestivalMatch(userMessage, records);
 
-    // 👉 GPT génère une requête personnalisée pour SerpAPI
     const searchQuery = await generateSearchQuery(userMessage);
-    console.log("🔍 Requête SerpAPI :", searchQuery);
     const webResults = await searchWeb(searchQuery);
 
     userHistories[sessionId].push({ role: 'user', content: userMessage });
@@ -164,7 +162,7 @@ Sinon, réponds simplement à la demande.
     ];
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-3.5-turbo',
       messages: messagesWithContext,
     });
 
@@ -178,12 +176,66 @@ Sinon, réponds simplement à la demande.
 
     res.json({ reply: gptReply });
   } catch (error) {
-    console.error("Erreur serveur :", error.message);
+    console.error("💥 Erreur serveur :", error.message);
     res.status(500).json({ error: "Erreur interne du serveur." });
+  }
+});
+
+app.post('/generate-quote', async (req, res) => {
+  const { sessionId } = req.body;
+  const history = userHistories[sessionId];
+
+  if (!history || history.length < 2) {
+    return res.status(400).json({ success: false, error: "Pas assez de contexte pour générer un devis." });
+  }
+
+  const lastUserMessage = history.slice().reverse().find(m => m.role === 'user')?.content || '';
+  const lastGptReply = history.slice().reverse().find(m => m.role === 'assistant')?.content || '';
+
+  const extractJsonPrompt = [
+    {
+      role: 'system',
+      content: `Tu es un assistant qui extrait des informations d’une conversation utilisateur pour générer un devis festival sous forme JSON strictement au format suivant :
+
+{
+  "style": "string",
+  "festival": "string",
+  "lieu": "string",
+  "date_debut": "YYYY-MM-DD",
+  "date_fin": "YYYY-MM-DD",
+  "nombre_personnes": number,
+  "budget": number
+}
+
+Ne réponds que par cet objet JSON. Même si certaines infos sont implicites, complète-les du mieux possible. Aucune explication.`
+    },
+    {
+      role: 'user',
+      content: `Message utilisateur : "${lastUserMessage}"\nRéponse du chatbot : "${lastGptReply}"`
+    }
+  ];
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: extractJsonPrompt,
+      temperature: 0.2
+    });
+
+    const jsonPayload = JSON.parse(completion.choices[0].message.content.trim());
+
+    // Envoi du JSON au webhook
+    await axios.post(process.env.WEBHOOK_URL, jsonPayload);
+    console.log("✅ JSON envoyé au webhook :", jsonPayload);
+
+    res.json({ success: true, data: jsonPayload });
+  } catch (error) {
+    console.error("❌ Erreur génération/envoi JSON :", error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Serveur lancé sur le port ${PORT}`);
+  console.log(`🚀 Serveur lancé sur le port ${PORT}`);
 });

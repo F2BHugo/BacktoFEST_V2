@@ -61,6 +61,24 @@
           chat.innerHTML += `<p><strong>GPT :</strong> ${data.reply}</p>`;
         });
     }
+
+    async function pdf() {
+  const sessionId = localStorage.getItem('sessionId');
+  const response = await fetch('/generate-quote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId })
+  });
+
+  const result = await response.json();
+
+  if (result.success) {
+    alert("✅ Devis généré et envoyé avec succès !");
+  } else {
+    alert("❌ Erreur lors de la génération du devis.");
+    console.error(result.error);
+  }
+}
   </script>
 </body>
 </html>
