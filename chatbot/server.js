@@ -16,7 +16,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const userHistories = {}; // { sessionId: [ { role, content } ] }
+const userHistories = {};
 
 function findFestivalMatch(userMessage, records) {
   const lowerMessage = userMessage.toLowerCase();
@@ -31,19 +31,11 @@ function isFestivalRelated(message) {
     "spectacle", "billet", "tarif", "pass", "soirée", "artiste", "techno", "rock",
     "jazz", "electro", "pop", "classique", "cinéma", "scène", "live", "foire",
     "salon", "open air", "événement culturel", "weekend festif",
-    "agence de voyage", "séjour", "voyage", "pack", "package", "circuit", "tour",
-    "excursion", "visite", "découverte", "activité touristique", "guide touristique",
-    "site touristique", "monument", "culture locale", "destinations", "destination",
-    "transport", "vol", "avion", "train", "bus", "navette", "aéroport", "transfert",
-    "trajet", "itinéraire", "correspondance", "déplacement",
-    "hébergement", "logement", "chambre", "hôtel", "auberge", "Airbnb", "location",
-    "camping", "nuitée",
-    "budget", "coût", "prix", "tarif", "devis", "frais", "paiement", "acompte",
-    "assurance voyage", "taxe", "douane", "visa", "passeport",
-    "ville", "lieu", "pays", "région", "environ", "autour", "proche de", "près de"
+    "séjour", "voyage", "pack", "package", "circuit", "formule", "tout compris",
+    "transport", "vol", "train", "bus", "navette", "logement", "hôtel", "Airbnb",
+    "hébergement", "prix", "tarif", "devis", "budget", "activité", "autour"
   ];
-  const lowerMsg = message.toLowerCase();
-  return keywords.some(keyword => lowerMsg.includes(keyword));
+  return keywords.some(k => message.toLowerCase().includes(k));
 }
 
 async function queryAirtable() {
@@ -61,8 +53,31 @@ async function queryAirtable() {
   }
 }
 
+async function generateSearchQuery(userMessage) {
+  const prompt = [
+    {
+      role: 'system',
+      content: `Tu aides à formuler une requête Google très ciblée pour chercher :
+- des offres de festival (billets, logement, transport)
+- des packs tout compris ou infos pratiques
+Ne réponds que par la requête.`
+    },
+    {
+      role: 'user',
+      content: `Formule une requête Google à partir de : "${userMessage}"`
+    }
+  ];
+
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    messages: prompt
+  });
+
+  return completion.choices[0].message.content.trim();
+}
+
 async function searchWeb(query) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     getJson({
       engine: "google",
       q: query,
@@ -117,33 +132,29 @@ app.post('/chat', async (req, res) => {
 
     const matchedFestival = findFestivalMatch(userMessage, records);
 
-    // ✨ GPT génère une requête web personnalisée
-    const searchPrompt = [
-      {
-        role: 'system',
-        content: "Tu es un assistant qui aide à formuler une requête Google pertinente en lien avec un festival. Réponds uniquement par la requête de recherche sans phrase autour."
-      },
-      {
-        role: 'user',
-        content: `Formule une requête web pour cette demande : "${userMessage}"`
-      }
-    ];
-
-    const searchCompletion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: searchPrompt
-    });
-
-    const searchQuery = searchCompletion.choices[0].message.content.trim();
+    // 👉 GPT génère une requête personnalisée pour SerpAPI
+    const searchQuery = await generateSearchQuery(userMessage);
     console.log("🔍 Requête SerpAPI :", searchQuery);
-
     const webResults = await searchWeb(searchQuery);
 
     userHistories[sessionId].push({ role: 'user', content: userMessage });
 
     const systemPrompt = {
       role: 'system',
-      content: `Voici les données extraites d'Airtable :\n${formattedData}\n\nEt les résultats web sur les activités autour :\n${webResults}\n\nUtilise ces informations pour répondre de façon naturelle, claire, et concise à la question de l'utilisateur. Reformule proprement, ne liste pas tout, adapte selon la demande.`
+      content: `
+Voici les données extraites d'Airtable :
+${formattedData}
+
+Et les résultats web :
+${webResults}
+
+🧠 Si l'utilisateur demande un pack, un devis ou une formule "tout compris", alors :
+- Propose un pack estimatif (logement, transport, billet)
+- Donne des fourchettes de prix si tu peux
+- Appuie-toi sur les résultats web pour citer quelques éléments
+- Adopte un ton de conseiller voyage, rassurant et synthétique
+Sinon, réponds simplement à la demande.
+`
     };
 
     const messagesWithContext = [
