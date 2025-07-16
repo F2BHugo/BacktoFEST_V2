@@ -164,7 +164,7 @@ Sinon, réponds simplement à la demande.
     ];
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o',
       messages: messagesWithContext,
     });
 
@@ -178,12 +178,12 @@ Sinon, réponds simplement à la demande.
 
     res.json({ reply: gptReply });
   } catch (error) {
-    console.error("💥 Erreur serveur :", error.message);
+    console.error("Erreur serveur :", error.message);
     res.status(500).json({ error: "Erreur interne du serveur." });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Serveur lancé sur le port ${PORT}`);
+  console.log(`Serveur lancé sur le port ${PORT}`);
 });
