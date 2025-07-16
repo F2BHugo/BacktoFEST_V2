@@ -1,42 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Assistant Festival</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
-    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
-    .message { margin: 10px 0; }
-    .user { color: #007bff; }
-    .bot { color: #28a745; }
+    body { font-family: Arial; padding: 20px; background: #f2f2f2; }
+    #chat { border: 1px solid #ccc; padding: 10px; background: #fff; height: 400px; overflow-y: scroll; margin-bottom: 10px; }
+    input[type="text"] { width: 80%; padding: 8px; }
+    button { padding: 8px 12px; }
   </style>
 </head>
 <body>
-  <h2>Assistant Festival</h2>
+  <h1>🎵 Assistant Festival</h1>
   <div id="chat"></div>
-  <input type="text" id="userInput" placeholder="Pose ta question..." style="width: 80%;">
+  <input type="text" id="messageInput" placeholder="Pose ta question sur un festival..." />
   <button onclick="sendMessage()">Envoyer</button>
+  <button onclick="resetChat()">🔄 Reset</button>
 
-  <h3>Je valide la proposition du chatbot et souhaite généré mon devis PDF</h3>
-  <button onclick="window.location.href='/generate-pdf'">Générer le devis PDF</button>
   <script>
+    // ✅ Génère un sessionId unique et persistant
+    const sessionId = localStorage.getItem("sessionId") || crypto.randomUUID();
+    localStorage.setItem("sessionId", sessionId);
+
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("messageInput");
+
     async function sendMessage() {
-      const input = document.getElementById("userInput");
       const message = input.value.trim();
       if (!message) return;
 
-      const chat = document.getElementById("chat");
-      chat.innerHTML += `<div class="message user"><strong>Toi :</strong> ${message}</div>`;
+      chat.innerHTML += `<p><strong>Vous :</strong> ${message}</p>`;
       input.value = "";
 
-      const res = await fetch("/chat", {
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message, sessionId })
+        });
+
+        const data = await res.json();
+        chat.innerHTML += `<p><strong>GPT :</strong> ${data.reply}</p>`;
+        chat.scrollTop = chat.scrollHeight;
+      } catch (err) {
+        chat.innerHTML += `<p><strong>Erreur :</strong> Impossible de contacter le serveur.</p>`;
+      }
+    }
+
+    function resetChat() {
+      chat.innerHTML += `<p><em>⏳ Réinitialisation...</em></p>`;
+      fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
-      });
-
-      const data = await res.json();
-      chat.innerHTML += `<div class="message bot"><strong>GPT :</strong> ${data.reply}</div>`;
-      chat.scrollTop = chat.scrollHeight;
+        body: JSON.stringify({ message: "reset", sessionId })
+      })
+        .then(res => res.json())
+        .then(data => {
+          chat.innerHTML += `<p><strong>GPT :</strong> ${data.reply}</p>`;
+        });
     }
   </script>
 </body>
