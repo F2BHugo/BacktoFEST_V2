@@ -16,6 +16,8 @@
   <input type="text" id="userInput" placeholder="Pose ta question..." style="width: 80%;">
   <button onclick="sendMessage()">Envoyer</button>
 
+  <h3>Je valide la proposition du chatbot et souhaite généré mon devis PDF</h3>
+  <button onclick="window.location.href='/generate-pdf'">Générer le devis PDF</button>
   <script>
     async function sendMessage() {
       const input = document.getElementById("userInput");
