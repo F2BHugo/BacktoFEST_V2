@@ -69,7 +69,7 @@ Ne réponds que par la requête.`
   ];
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4o',
     messages: prompt
   });
 
@@ -96,7 +96,7 @@ async function searchWeb(query) {
 }
 
 app.post('/chat', async (req, res) => {
-  const { message: userMessage, sessionId } = req.body;
+  const { message: userMessage, sessionId, lang = 'fr'} = req.body;
   if (!sessionId) return res.status(400).json({ error: "Session ID manquant." });
 
   if (userMessage.toLowerCase().trim() === 'reset') {
@@ -162,7 +162,7 @@ Sinon, réponds simplement à la demande.
     ];
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o',
       messages: messagesWithContext,
     });
 
@@ -202,7 +202,7 @@ app.post('/generate-quote', async (req, res) => {
   "Festival proposé": "String"
 }
 
-Pas d’explication. Remplis Festival proposé même si cela n'est pas spécifier.`
+Pas d’explication. Remplis Festival proposé même si cela n'est pas spécifier. Ne mets pas de commentaires Markdown (pas de \`\`\`).`
     },
     {
       role: 'user',
