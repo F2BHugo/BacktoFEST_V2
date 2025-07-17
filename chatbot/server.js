@@ -69,7 +69,7 @@ Ne réponds que par la requête.`
   ];
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'gpt-4.1',
     messages: prompt
   });
 
@@ -162,7 +162,7 @@ Sinon, réponds simplement à la demande.
     ];
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4.1',
       messages: messagesWithContext,
     });
 
@@ -203,7 +203,7 @@ Exemple de format attendu :
   "Festival proposé": "String"
 }
 
-Pas d’explication. Remplis Festival proposé même si cela n'est pas spécifier. Même chose pour le budget, aucune valeur ne doit etre vide.`
+Remplis Festival proposé même si cela n'est pas spécifier avec un vrai festival . Même chose pour le budget, aucune valeur ne doit etre vide.`
     },
     {
       role: 'user',
@@ -213,7 +213,7 @@ Pas d’explication. Remplis Festival proposé même si cela n'est pas spécifie
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4.1",
       messages: extractPrompt,
       temperature: 0.3
     });
@@ -235,8 +235,7 @@ Pas d’explication. Remplis Festival proposé même si cela n'est pas spécifie
     console.log("✅ Devis envoyé à n8n :", fullJson);
     res.json({ success: true, data: fullJson });
   } catch (e) {
-    console.error("❌ Erreur génération ou envoi :", e.message);
-    res.status(500).json({ success: false, error: e.message });
+    
   }
 });
 
