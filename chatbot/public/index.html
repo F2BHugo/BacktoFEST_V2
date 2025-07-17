@@ -65,41 +65,36 @@
     }
 
     async function pdf() {
-  const prenom = document.getElementById('prenom').value;
-  const email = document.getElementById('email').value;
-  const ville = document.getElementById('ville').value;
-  const sessionId = localStorage.getItem('sessionId');
+    const prenom = document.getElementById('prenom').value;
+    const email = document.getElementById('email').value;
+    const ville = document.getElementById('ville').value;
+    const sessionId = localStorage.getItem('sessionId');
 
-  if (!prenom || !email || !ville) {
-    alert("Merci de remplir tous les champs.");
-    return;
+    if (!prenom || !email || !ville) {
+      alert("Merci de remplir tous les champs.");
+      return;
+    }
+
+    try {
+      const response = await fetch('/generate-quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, prenom, email, ville })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert("✅ Devis généré et envoyé avec succès !");
+      } else {
+        alert("❌ Erreur lors de la génération du devis.");
+        console.error(result.error);
+      }
+    } catch (err) {
+      alert("❌ Problème lors de l’envoi au serveur.");
+      console.error(err);
+    }
   }
-
-  const response = await fetch('/generate-quote', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId, prenom, email, ville })
-  });
-
-  const result = await response.json();
-
-  if (result.success) {
-    alert("✅ Devis envoyé avec succès !");
-  } else {
-    alert("❌ Erreur lors de la génération du devis.");
-    console.error(result.error);
-  }
-}
-
-  const result = await response.json();
-
-  if (result.success) {
-    alert("✅ Devis généré et envoyé avec succès !");
-  } else {
-    alert("❌ Erreur lors de la génération du devis.");
-    console.error(result.error);
-  }
-}
   </script>
 </body>
 </html>
