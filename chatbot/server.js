@@ -182,56 +182,59 @@ Sinon, réponds simplement à la demande.
 });
 
 app.post('/generate-quote', async (req, res) => {
-  const { sessionId } = req.body;
+  const { sessionId, prenom, email, ville } = req.body;
   const history = userHistories[sessionId];
 
-  if (!history || history.length < 2) {
-    return res.status(400).json({ success: false, error: "Pas assez de contexte pour générer un devis." });
-  }
+  if (!history) return res.status(400).json({ success: false, error: "Pas de conversation active." });
 
-  const lastUserMessage = history.slice().reverse().find(m => m.role === 'user')?.content || '';
+  const lastUserMsg = history.slice().reverse().find(m => m.role === 'user')?.content || '';
   const lastGptReply = history.slice().reverse().find(m => m.role === 'assistant')?.content || '';
 
-  const extractJsonPrompt = [
+  const extractPrompt = [
     {
       role: 'system',
-      content: `Tu es un assistant qui extrait des informations d’une conversation utilisateur pour générer un devis festival sous forme JSON strictement au format suivant :
+      content: `Tu extrais ces infos d'un échange : "Style musical", "Budget", "Dates", "Festival proposé". Retourne-les dans ce format :
 
 {
-  "style": "string",
-  "festival": "string",
-  "lieu": "string",
-  "date_debut": "YYYY-MM-DD",
-  "date_fin": "YYYY-MM-DD",
-  "nombre_personnes": number,
-  "budget": number
+  "Style musical": "String",
+  "Budget": Number,
+  "Dates": "String",
+  "Festival proposé": "String"
 }
 
-Ne réponds que par cet objet JSON. Même si certaines infos sont implicites, complète-les du mieux possible. Aucune explication.`
+Pas d’explication. Remplis même si c’est déduit.`
     },
     {
       role: 'user',
-      content: `Message utilisateur : "${lastUserMessage}"\nRéponse du chatbot : "${lastGptReply}"`
+      content: `Message : "${lastUserMsg}"\nRéponse : "${lastGptReply}"`
     }
   ];
 
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages: extractJsonPrompt,
-      temperature: 0.2
+      messages: extractPrompt,
+      temperature: 0.3
     });
 
-    const jsonPayload = JSON.parse(completion.choices[0].message.content.trim());
+    const gptJson = JSON.parse(completion.choices[0].message.content.trim());
 
-    // Envoi du JSON au webhook
-    await axios.post(process.env.WEBHOOK_URL, jsonPayload);
-    console.log("✅ JSON envoyé au webhook :", jsonPayload);
+    const fullJson = {
+      "Prénom": prenom,
+      "Email": email,
+      "Ville de départ": ville,
+      ...gptJson
+    };
 
-    res.json({ success: true, data: jsonPayload });
-  } catch (error) {
-    console.error("❌ Erreur génération/envoi JSON :", error.message);
-    res.status(500).json({ success: false, error: error.message });
+    await axios.post(process.env.WEBHOOK_URL, fullJson, {
+      headers: { "Content-Type": "application/json" }
+    });
+
+    console.log("✅ Devis envoyé à n8n :", fullJson);
+    res.json({ success: true, data: fullJson });
+  } catch (e) {
+    console.error("❌ Erreur génération ou envoi :", e.message);
+    res.status(500).json({ success: false, error: e.message });
   }
 });
 

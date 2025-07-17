@@ -17,10 +17,12 @@
   <input type="text" id="messageInput" placeholder="Pose ta question sur un festival..." />
   <button onclick="sendMessage()">Envoyer</button>
   <button onclick="resetChat()">🔄 Reset</button>
+  <input id="prenom" placeholder="Prénom" required />
+  <input id="email" type="email" placeholder="Email" required />
+  <input id="ville" placeholder="Ville de départ" required />
   <button onclick="pdf()">Génèration du devis</button>
 
   <script>
-    // ✅ Génère un sessionId unique et persistant
     const sessionId = localStorage.getItem("sessionId") || crypto.randomUUID();
     localStorage.setItem("sessionId", sessionId);
 
@@ -63,12 +65,31 @@
     }
 
     async function pdf() {
+  const prenom = document.getElementById('prenom').value;
+  const email = document.getElementById('email').value;
+  const ville = document.getElementById('ville').value;
   const sessionId = localStorage.getItem('sessionId');
+
+  if (!prenom || !email || !ville) {
+    alert("Merci de remplir tous les champs.");
+    return;
+  }
+
   const response = await fetch('/generate-quote', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId })
+    body: JSON.stringify({ sessionId, prenom, email, ville })
   });
+
+  const result = await response.json();
+
+  if (result.success) {
+    alert("✅ Devis envoyé avec succès !");
+  } else {
+    alert("❌ Erreur lors de la génération du devis.");
+    console.error(result.error);
+  }
+}
 
   const result = await response.json();
 
