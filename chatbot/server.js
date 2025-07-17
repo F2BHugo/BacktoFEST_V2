@@ -194,7 +194,8 @@ app.post('/generate-quote', async (req, res) => {
     {
       role: 'system',
       content: `Tu extrais ces infos d'un échange : "Style musical", "Budget", "Dates", "Festival proposé". Retourne-les dans ce format JSON :
-
+Ta réponse **doit être uniquement un JSON brut**, sans balises Markdown, sans \`\`\`, sans texte autour. Pas d’explication, pas de phrase avant ou après.
+Exemple de format attendu :
 {
   "Style musical": "String",
   "Budget": Number,
