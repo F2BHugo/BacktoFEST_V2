@@ -5,28 +5,151 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Assistant Festival</title>
   <style>
-    body { font-family: Arial; padding: 20px; background: #f2f2f2; }
-    #chat { border: 1px solid #ccc; padding: 10px; background: #fff; height: 400px; overflow-y: scroll; margin-bottom: 10px; }
-    input[type="text"] { width: 80%; padding: 8px; }
-    button { padding: 8px 12px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: linear-gradient(to right, #e0c3fc, #8ec5fc);
+      display: flex;
+      justify-content: center;
+    }
+
+    .chat-wrapper {
+      width: 100%;
+      max-width: 600px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      text-align: center;
+      background: #6a82fb;
+      color: white;
+      margin: 0;
+      padding: 15px;
+    }
+
+    #chat {
+      padding: 20px;
+      height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      max-width: 75%;
+      padding: 12px 18px;
+      border-radius: 18px;
+      margin: 8px;
+      font-size: 1rem;
+      line-height: 1.5;
+      position: relative;
+      word-wrap: break-word;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .message.bot {
+      background: linear-gradient(to right, #d66dd0, #aa6cf9);
+      color: white;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.user {
+      background: linear-gradient(to right, #ff416c, #6a82fb);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .input-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px;
+      border-top: 1px solid #eee;
+      background: #fafafa;
+    }
+
+    input[type="text"],
+    input[type="email"] {
+      flex: 1 1 48%;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    button, select {
+      padding: 10px 16px;
+      font-size: 1rem;
+      background-color: #6a82fb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #4c63d0;
+    }
+
+    select {
+      margin: 16px;
+      background: white;
+      color: black;
+      border: 1px solid #ccc;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .message {
+        font-size: 0.95rem;
+      }
+
+      .input-area {
+        flex-direction: column;
+      }
+
+      input, button {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>🎵 Assistant Festival</h1>
-  <select id="lang">
-  <option value="fr">🇫🇷 Français</option>
-  <option value="en">🇬🇧 English</option>
-  <option value="es">🇪🇸 Español</option>
-  </select>
-  <div id="chat"></div>
-  <input type="text" id="messageInput" placeholder="Pose ta question sur un festival..." />
-  <button onclick="sendMessage()">Envoyer</button>
-  <button onclick="resetChat()">🔄 Reset</button>
-  <input id="prenom" placeholder="Prénom" required />
-  <input id="email" type="email" placeholder="Email" required />
-  <input id="ville" placeholder="Ville de départ" required />
-  <button onclick="pdf()">Génèration du devis</button>
+  <div class="chat-wrapper">
+    <h1>🎵 Assistant Festival</h1>
 
+    <select id="lang">
+      <option value="fr">🇫🇷 Français</option>
+      <option value="en">🇬🇧 English</option>
+      <option value="es">🇪🇸 Español</option>
+    </select>
+
+    <div id="chat"></div>
+
+    <div class="input-area">
+      <input type="text" id="messageInput" placeholder="Pose ta question sur un festival..." />
+      <input type="text" id="prenom" placeholder="Prénom" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="text" id="ville" placeholder="Ville de départ" required />
+      <button onclick="sendMessage()">Envoyer</button>
+      <button onclick="pdf()">📄 Génération du devis</button>
+      <button onclick="resetChat()">🔄 Reset</button>
+    </div>
+  </div>
   <script>
     const sessionId = localStorage.getItem("sessionId") || crypto.randomUUID();
     localStorage.setItem("sessionId", sessionId);
@@ -58,7 +181,7 @@
     }
 
     function resetChat() {
-      chat.innerHTML += `<p><em>⏳ Réinitialisation...</em></p>`;
+      chat.innerHTML += `<p><em> Réinitialisation...</em></p>`;
       fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -91,13 +214,13 @@
       const result = await response.json();
 
       if (result.success) {
-        alert("✅ Devis généré et envoyé avec succès !");
+        alert("Devis généré et envoyé avec succès !");
       } else {
         alert("❌ Erreur lors de la génération du devis.");
         console.error(result.error);
       }
     } catch (err) {
-      alert("❌ Problème lors de l’envoi au serveur.");
+      alert("Problème lors de l’envoi au serveur.");
       console.error(err);
     }
   }

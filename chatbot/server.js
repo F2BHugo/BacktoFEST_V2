@@ -33,7 +33,21 @@ function isFestivalRelated(message) {
     "salon", "open air", "événement culturel", "weekend festif",
     "séjour", "voyage", "pack", "package", "circuit", "formule", "tout compris",
     "transport", "vol", "train", "bus", "navette", "logement", "hôtel", "Airbnb",
-    "hébergement", "prix", "tarif", "devis", "budget", "activité", "autour"
+    "hébergement", "prix", "tarif", "devis", "budget", "activité", "autour",
+    "festival", "event", "music", "concert", "line-up", "line-up",
+  "show", "ticket", "price", "pass", "party", "artist", "techno", "rock",
+  "jazz", "electro", "pop", "classical", "cinema", "stage", "live", "fair",
+  "expo", "open air", "cultural event", "festive weekend",
+  "stay", "trip", "pack", "package", "tour", "deal", "all inclusive",
+  "transport", "flight", "train", "bus", "shuttle", "accommodation", "hotel", "Airbnb",
+  "lodging", "price", "rate", "quote", "budget", "activity", "around",
+   "festival", "evento", "música", "concierto", "programación", "cartel",
+  "espectáculo", "entrada", "precio", "pase", "fiesta", "artista", "techno", "rock",
+  "jazz", "electrónica", "pop", "clásica", "cine", "escenario", "en vivo", "feria",
+  "salón", "al aire libre", "evento cultural", "fin de semana festivo",
+  "estancia", "viaje", "pack", "paquete", "circuito", "oferta", "todo incluido",
+  "transporte", "vuelo", "tren", "autobús", "lanzadera", "alojamiento", "hotel", "Airbnb",
+  "hospedaje", "precio", "tarifa", "presupuesto", "presupuesto", "actividad", "alrededor"
   ];
   return keywords.some(k => message.toLowerCase().includes(k));
 }
@@ -48,7 +62,7 @@ async function queryAirtable() {
     });
     return response.data.records;
   } catch (error) {
-    console.error("❌ Erreur Airtable:", error.response?.status, error.response?.data);
+    console.error("Erreur Airtable:", error.response?.status, error.response?.data);
     throw error;
   }
 }
@@ -106,7 +120,7 @@ app.post('/chat', async (req, res) => {
         content: `Tu es un assistant expert en festivals. Tu réponds uniquement aux questions concernant :\n- les festivals (musique, culture, cinéma, etc.)\n- les activités à faire autour (visites, transport, logement, tourisme)\nUtilise les données suivantes et reformule avec un ton fluide.`
       }
     ];
-    return res.json({ reply: "✅ La conversation a été réinitialisée." });
+    return res.json({ reply: "La conversation a été réinitialisée." });
   }
 
   if (!userHistories[sessionId]) {
@@ -146,7 +160,7 @@ ${formattedData}
 Et les résultats web :
 ${webResults}
 
-🧠 Si l'utilisateur demande un pack, un devis ou une formule "tout compris", alors :
+Si l'utilisateur demande un pack, un devis ou une formule "tout compris", alors :
 - Propose un pack estimatif (logement, transport, billet)
 - Donne des fourchettes de prix si tu peux
 - Appuie-toi sur les résultats web pour citer quelques éléments
@@ -226,13 +240,13 @@ Remplis Festival proposé même si cela n'est pas spécifier avec un vrai festiv
       'Ville de départ': ville,
       ...gptJson
     };
-    console.log("✅ Devis envoyé à n8n :", JSON.stringify(fullJson, null, 2));
+    console.log("Devis envoyé à n8n :", JSON.stringify(fullJson, null, 2));
     await axios.post(process.env.WEBHOOK_URL, fullJson, {
       headers: { "Content-Type": "application/json" }
       
     });
     
-    console.log("✅ Devis envoyé à n8n :", fullJson);
+    console.log("Devis envoyé à n8n :", fullJson);
     res.json({ success: true, data: fullJson });
   } catch (e) {
     
@@ -241,5 +255,5 @@ Remplis Festival proposé même si cela n'est pas spécifier avec un vrai festiv
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Serveur lancé sur le port ${PORT}`);
+  console.log(`Serveur lancé sur le port ${PORT}`);
 });
