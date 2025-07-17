@@ -226,7 +226,7 @@ Pas d’explication. Remplis Festival proposé même si cela n'est pas spécifie
       'Ville de départ': ville,
       ...gptJson
     };
-    console.log("✅ Devis envoyé à n8n :", fullJson);
+    console.log("✅ Devis envoyé à n8n :", JSON.stringify(fullJson, null, 2));
     await axios.post(process.env.WEBHOOK_URL, fullJson, {
       headers: { "Content-Type": "application/json" }
       
