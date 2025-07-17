@@ -202,7 +202,7 @@ app.post('/generate-quote', async (req, res) => {
   "Festival proposé": "String"
 }
 
-Pas d’explication. Remplis même si c’est déduit.`
+Pas d’explication. Remplis Festival proposé même si cela n'est pas spécifier.`
     },
     {
       role: 'user',
