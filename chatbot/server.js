@@ -221,9 +221,9 @@ Pas d’explication. Remplis Festival proposé même si cela n'est pas spécifie
     const gptJson = JSON.parse(completion.choices[0].message.content.trim());
 
     const fullJson = {
-      "Prénom": prenom,
-      "Email": email,
-      "Ville de départ": ville,
+      'Prénom': prenom,
+      'Email': email,
+      'Ville de départ': ville,
       ...gptJson
     };
     console.log("✅ Devis envoyé à n8n :", fullJson);
