@@ -193,7 +193,7 @@ app.post('/generate-quote', async (req, res) => {
   const extractPrompt = [
     {
       role: 'system',
-      content: `Tu extrais ces infos d'un échange : "Style musical", "Budget", "Dates", "Festival proposé". Retourne-les dans ce format :
+      content: `Tu extrais ces infos d'un échange : "Style musical", "Budget", "Dates", "Festival proposé". Retourne-les dans ce format JSON :
 
 {
   "Style musical": "String",
