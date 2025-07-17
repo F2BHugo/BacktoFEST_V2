@@ -202,7 +202,7 @@ app.post('/generate-quote', async (req, res) => {
   "Festival proposé": "String"
 }
 
-Pas d’explication. Remplis Festival proposé même si cela n'est pas spécifier. Ne mets pas de commentaires Markdown (pas de \`\`\`).`
+Pas d’explication. Remplis Festival proposé même si cela n'est pas spécifier. Même chose pour le budget, aucune valeur ne doit etre vide.`
     },
     {
       role: 'user',
