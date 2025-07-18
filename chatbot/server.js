@@ -262,32 +262,7 @@ Remplis Festival proposé même si cela n'est pas spécifier avec un vrai festiv
     
   }
 });
-app.post('/create-checkout-session', async (req, res) => {
-  try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name: 'Pack Festival Nomade',
-            description: 'Billet + hébergement',
-          },
-          unit_amount: 5000, 
-        },
-        quantity: 1,
-      }],
-      mode: 'payment',
-      success_url: 'https://backtofest-v2.onrender.com/success.html',
-      cancel_url: 'https://backtofest-v2.onrender.com/cancel.html',
-    });
 
-    res.json({ url: session.url });
-  } catch (err) {
-    console.error('Erreur Stripe :', err);
-    res.status(500).json({ error: 'Erreur lors de la création du paiement.' });
-  }
-});
 
 
 const PORT = process.env.PORT || 3000;
