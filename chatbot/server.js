@@ -151,10 +151,19 @@ app.post('/chat', async (req, res) => {
     const webResults = await searchWeb(searchQuery);
 
     userHistories[sessionId].push({ role: 'user', content: userMessage });
-
+    let intro = "";
+if (lang === "en") {
+  intro = "You must answer in English.\n";
+} else if (lang === "es") {
+  intro = "Debes responder en español.\n";
+} else {
+  intro = "Tu dois répondre en français.\n";
+}
     const systemPrompt = {
       role: 'system',
       content: `
+      ${intro}
+
 Voici les données extraites d'Airtable :
 ${formattedData}
 
