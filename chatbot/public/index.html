@@ -14,7 +14,16 @@
       justify-content: center;
       align-items: center;
     }
-
+.bot-message {
+  color: white;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  padding: 10px 15px;
+  border-radius: 12px;
+  margin: 5px 0;
+  max-width: 80%;
+  align-self: flex-start;
+}
     .chat-wrapper {
       position: relative;
   width: 90%;
@@ -171,7 +180,7 @@
       const message = input.value.trim();
       if (!message) return;
 
-      chat.innerHTML += `<p><strong>Vous :</strong> ${message}</p>`;
+      chat.innerHTML += `<p class="bot-message"><strong>Vous :</strong> ${message}</p>`;
       input.value = "";
 
       try {
@@ -182,15 +191,15 @@
         });
 
         const data = await res.json();
-        chat.innerHTML += `<p><strong>GPT :</strong> ${data.reply}</p>`;
+        chat.innerHTML += `<p class="bot-message"><strong>GPT :</strong> ${data.reply}</p>`;
         chat.scrollTop = chat.scrollHeight;
       } catch (err) {
-        chat.innerHTML += `<p><strong>Erreur :</strong> Impossible de contacter le serveur.</p>`;
+        chat.innerHTML += `<p class="bot-message"><strong>Erreur :</strong> Impossible de contacter le serveur.</p>`;
       }
     }
 
     function resetChat() {
-      chat.innerHTML += `<p><em> Réinitialisation...</em></p>`;
+      chat.innerHTML += `<p class="bot-message"><em> Réinitialisation...</em></p>`;
       fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -198,7 +207,7 @@
       })
         .then(res => res.json())
         .then(data => {
-          chat.innerHTML += `<p><strong>GPT :</strong> ${data.reply}</p>`;
+          chat.innerHTML += `<p class="bot-message"><strong>GPT :</strong> ${data.reply}</p>`;
         });
     }
 
@@ -225,7 +234,7 @@
       if (result.success) {
         alert("Devis généré et envoyé avec succès !");
       } else {
-        alert("❌ Erreur lors de la génération du devis.");
+        alert("Erreur lors de la génération du devis.");
         console.error(result.error);
       }
     } catch (err) {
